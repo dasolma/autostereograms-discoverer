@@ -1,6 +1,7 @@
+import os
 from random import randint
 import keras
-from .utils import create_stereogram, create_random_figure
+from utils import create_stereogram, create_random_figure
 import numpy as np
 
 class RandomFiguresDataGenerator(keras.utils.Sequence):

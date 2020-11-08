@@ -1,7 +1,7 @@
 from keras import Sequential
-from keras.layers import Conv2D, Activation, Flatten, Dense
-
-from src.generators import RandomFiguresDataGenerator
+from keras.layers import Conv2D, Activation, Flatten, Dense, BatchNormalization, MaxPooling2D
+from generators import RandomFiguresDataGenerator
+from layers import OverlapingLayer, StereoConv
 
 
 def classify_overlap(shape=(1, 100, 200)):
@@ -41,7 +41,8 @@ def classify_overlap(shape=(1, 100, 200)):
     model.add(Dense(shape[2]))
     model.add(Activation('softmax'))
 
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer='adam',
+                  metrics=['accuracy'])
 
     # Generators
     training_generator = RandomFiguresDataGenerator(batch_size=32, shape=shape[1:], samples_per_epoch=1000,
@@ -52,4 +53,45 @@ def classify_overlap(shape=(1, 100, 200)):
     return model, training_generator, validation_generator
 
 
+def classifly_with_custom_layer(custom_layer, shape=(1, 100, 200)):
 
+    model = Sequential()
+    model.add(custom_layer(input_shape=shape))
+    model.add(BatchNormalization())
+    model.add(Conv2D(32, kernel_size=(3, 3)))
+    model.add(Activation('relu'))
+    model.add(Conv2D(32, kernel_size=(3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D((5, 5)))
+    model.add(Conv2D(32, kernel_size=(3, 3)))
+    model.add(Activation('relu'))
+    model.add(Conv2D(32, kernel_size=(3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D((3, 3)))
+    model.add(Conv2D(32, kernel_size=(3, 3)))
+    model.add(Activation('relu'))
+    model.add(Flatten())
+    model.add(Dense(512))
+    model.add(Activation('relu'))
+    model.add(Dense(256))
+    model.add(Activation('relu'))
+    model.add(Dense(shape[1]))
+    model.add(Activation('softmax'))
+
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+    # Generators
+    training_generator = RandomFiguresDataGenerator(batch_size=32, shape=shape, samples_per_epoch=1000,
+                                       mode='multiclass_overlapping', normalize=True)
+    validation_generator = RandomFiguresDataGenerator(batch_size=32, shape=shape, samples_per_epoch=500,
+                                         mode='multiclass_overlapping', normalize=True)
+
+
+    return model, training_generator, validation_generator
+
+
+def classifly_with_overlaping_layer(shape=(1, 100, 200)):
+    return classifly_with_custom_layer(OverlapingLayer, shape)
+
+def classifly_with_stereoconv_layer(shape=(1, 100, 200)):
+    return classifly_with_custom_layer(StereoConv, shape)

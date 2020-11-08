@@ -1,6 +1,7 @@
 import os
 import keras
 import numpy as np
+from IPython import get_ipython
 from skimage.draw import polygon, circle
 from math import ceil
 from random import randint
@@ -160,3 +161,14 @@ def create_random_figure(shape, class_, depth=None, minx=0):
         img[rr, cc] = 255
 
     return img
+
+
+def in_ipynb():
+    try:
+        cfg = get_ipython().config
+        if cfg['IPKernelApp']['parent_appname'] == 'ipython-notebook':
+            return True
+        else:
+            return False
+    except:
+        return False
