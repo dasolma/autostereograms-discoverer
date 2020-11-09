@@ -1,11 +1,26 @@
 import keras.backend as K
 from keras.engine.topology import Layer
 import numpy as np
+import tensorflow as tf
+import keras.backend.tensorflow_backend as tfback
+
+
+def _get_available_gpus():
+    """Get a list of available gpu devices (formatted as strings).
+
+    # Returns
+        A list of available GPU devices.
+    """
+    #global _LOCAL_DEVICES
+    if tfback._LOCAL_DEVICES is None:
+        devices = tf.config.list_logical_devices()
+        tfback._LOCAL_DEVICES = [x.name for x in devices]
+    return [x for x in tfback._LOCAL_DEVICES if 'device:gpu' in x.lower()]
+
+tfback._get_available_gpus = _get_available_gpus
+
 
 class OverlapingLayer(Layer):
-    '''
-    This layer compute of the overlaping from the input feature map with itself using a loop.
-    '''
 
     def __init__(self, **kwargs):
         super(OverlapingLayer, self).__init__(**kwargs)
@@ -19,19 +34,18 @@ class OverlapingLayer(Layer):
         super(OverlapingLayer, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
+        # return K.dot(x, self.kernel)
         r = []
-        for i in range(x.shape[3]):
-            t = x[:, :, :, :i]
-            t = K.concatenate([t, x[:, :, :, :x.shape[3] - i]], axis=3)
-            t = K.expand_dims(x * self.w1[0] + (self.b[0] - t) * self.w2[0], axis=1)
-            t = K.reshape(t, [-1] + list(x.shape)[1:])
-            r.append(t)
+        for i in range(x.shape[2]):
+            t = x[:, :, :i]
+            t = K.concatenate([t, x[:, :, :x.shape[2] - i]], axis=-1)
+            r.append(K.expand_dims(x * self.w1[0] + (self.b[0] - t) * self.w2[0], axis=1))
+
 
         return K.concatenate(r, axis=1)
 
     def compute_output_shape(self, input_shape):
-        return (input_shape[0], input_shape[3], input_shape[2], input_shape[3])
-
+        return (input_shape[0], input_shape[1], input_shape[2], input_shape[2])
 
 class StereoConv(Layer):
     '''

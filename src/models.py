@@ -53,7 +53,7 @@ def classify_overlap(shape=(1, 100, 200)):
     return model, training_generator, validation_generator
 
 
-def classifly_with_custom_layer(custom_layer, shape=(1, 100, 200)):
+def classifly_with_custom_layer(custom_layer, shape=(100, 200)):
 
     model = Sequential()
     model.add(custom_layer(input_shape=shape))
@@ -75,22 +75,22 @@ def classifly_with_custom_layer(custom_layer, shape=(1, 100, 200)):
     model.add(Activation('relu'))
     model.add(Dense(256))
     model.add(Activation('relu'))
-    model.add(Dense(shape[1]))
+    model.add(Dense(shape[-1]))
     model.add(Activation('softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     # Generators
-    training_generator = RandomFiguresDataGenerator(batch_size=32, shape=shape, samples_per_epoch=1000,
-                                       mode='multiclass_overlapping', normalize=True)
-    validation_generator = RandomFiguresDataGenerator(batch_size=32, shape=shape, samples_per_epoch=500,
-                                         mode='multiclass_overlapping', normalize=True)
+    training_generator = RandomFiguresDataGenerator(batch_size=32, shape=shape[1:], samples_per_epoch=1000,
+                                       mode='multiclass_overlapping', normalize=True, add_channel=True)
+    validation_generator = RandomFiguresDataGenerator(batch_size=32, shape=shape[1:], samples_per_epoch=500,
+                                         mode='multiclass_overlapping', normalize=True, add_channel=True)
 
 
     return model, training_generator, validation_generator
 
 
-def classifly_with_overlaping_layer(shape=(1, 100, 200)):
+def classifly_with_overlaping_layer(shape=(100, 200)):
     return classifly_with_custom_layer(OverlapingLayer, shape)
 
 def classifly_with_stereoconv_layer(shape=(1, 100, 200)):

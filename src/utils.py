@@ -1,5 +1,4 @@
 import os
-import keras
 import numpy as np
 from IPython import get_ipython
 from skimage.draw import polygon, circle

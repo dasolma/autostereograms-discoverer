@@ -3,7 +3,7 @@ import argparse
 import sys
 from models import classify_overlap, classifly_with_overlaping_layer, classifly_with_stereoconv_layer
 from utils import in_ipynb
-from livelossplot import PlotLossesKeras
+from livelossplot import PlotLossesKerasTF
 
 def main(argv):
     """Command line entry point
@@ -19,7 +19,7 @@ def main(argv):
 
     args = parser.parse_args(argv)
 
-    callbacks = [PlotLossesKeras()] if in_ipynb() else []
+    callbacks = [PlotLossesKerasTF()] if in_ipynb() else []
     models = {
         'naive': classify_overlap,
         'overlapping': classifly_with_overlaping_layer,
@@ -28,6 +28,7 @@ def main(argv):
 
     if args.experiment in models.keys():
         model, train_gen, val_gen = models[args.experiment]()
+        model.summary()
         model.fit_generator(generator=train_gen, validation_data=val_gen,
                             epochs=200, verbose=1, callbacks=callbacks)
         if args.output:
