@@ -37,9 +37,12 @@ def main(argv):
     if args.experiment in models.keys():
         model, train_gen, val_gen = models[args.experiment]()
         model.summary()
+
+        print("Training %d epochs" % args.epochs)
         model.fit_generator(generator=train_gen, validation_data=val_gen,
                             epochs=args.epochs, verbose=1, callbacks=callbacks)
         if args.output:
+            print("Saving model to ", args.output)
             model.save(args.output)
 
     else:
