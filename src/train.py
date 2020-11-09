@@ -4,6 +4,7 @@ import sys
 from models import classify_overlap, classifly_with_overlaping_layer, classifly_with_stereoconv_layer
 from utils import in_ipynb
 from livelossplot import PlotLossesKerasTF
+import os
 
 def main(argv):
     """Command line entry point
@@ -12,12 +13,17 @@ def main(argv):
 
     parser = argparse.ArgumentParser(prog='train', description='train the differents models')
     parser.add_argument('experiment', nargs='?', default=None, help='name of the experiment: naive')
-    parser.add_argument('--test_path', help='path to the images used as test dataset', action='append',
+    parser.add_argument('--test_path', help='path to the images used as test dataset', action='store',
                         required=False)
-    parser.add_argument('--output', help='file path where save the trained model', action='append',
+    parser.add_argument('--output', help='file path where save the trained model', action='store',
+                        required=False)
+    parser.add_argument('--gpu', help='the GPU id to use', action='store',
                         required=False)
 
     args = parser.parse_args(argv)
+
+    if args.gpu:
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 
     callbacks = [PlotLossesKerasTF()] if in_ipynb() else []
     models = {
