@@ -5,6 +5,8 @@ from skimage.draw import polygon, circle
 from math import ceil
 from random import randint
 import cv2
+from matplotlib import pyplot as plt
+import random
 
 def create_stereogram(img, pattern_width=50, invert=True):
     '''
@@ -171,3 +173,44 @@ def in_ipynb():
             return False
     except:
         return False
+
+
+
+def show_sampledata(generator, samples=10):
+    data = generator.__getitem__(0)
+    fig = plt.figure(figsize=(30, 50))
+    w, h = 20, 10
+    columns, rows = 3, min(len(data[0]), samples)
+
+    i = 1
+    fig_id = 1
+    while i < rows:
+        auto_stereogram, stereosis_factor = data[0][i], data[1][i]
+
+        if len(auto_stereogram.shape) == 3:
+            shape = auto_stereogram.shape[1:]
+            auto_stereogram = np.reshape(auto_stereogram, shape)
+        else:
+            shape = auto_stereogram.shape
+
+        stereosis_factor = np.where(stereosis_factor == 1)[0][0]
+
+        zeros = np.zeros((shape[0], stereosis_factor))
+        sto = .5 * auto_stereogram - .5 * np.hstack((zeros, auto_stereogram[:, :-stereosis_factor]))
+
+        random_stereosis_factor = random.randint(10, 190)
+        zeros = np.zeros((shape[0], random_stereosis_factor))
+        nosto = .5 * auto_stereogram - .5 * np.hstack((zeros, auto_stereogram[:, :-random_stereosis_factor]))
+
+        fig.add_subplot(rows, columns, fig_id)
+        plt.imshow(auto_stereogram, cmap='gray')
+
+        fig.add_subplot(rows, columns, fig_id + 1)
+        plt.imshow(sto, cmap='gray')
+
+        fig.add_subplot(rows, columns, fig_id + 2)
+        plt.imshow(nosto, cmap='gray')
+        i += 1
+        fig_id += 3
+
+
