@@ -19,6 +19,8 @@ def main(argv):
                         required=False)
     parser.add_argument('--gpu', help='the GPU id to use', action='store',
                         required=False)
+    parser.add_argument('--epochs', help='number to epochs for training (default 200', action='store',
+                        required=False, default=200, type=int)
 
     args = parser.parse_args(argv)
 
@@ -36,7 +38,7 @@ def main(argv):
         model, train_gen, val_gen = models[args.experiment]()
         model.summary()
         model.fit_generator(generator=train_gen, validation_data=val_gen,
-                            epochs=200, verbose=1, callbacks=callbacks)
+                            epochs=args.epochs, verbose=1, callbacks=callbacks)
         if args.output:
             model.save(args.output)
 
