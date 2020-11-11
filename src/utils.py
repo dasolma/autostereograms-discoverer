@@ -1,6 +1,9 @@
 import os
 import numpy as np
-from IPython import get_ipython
+try:
+    from IPython import get_ipython
+except:
+    pass
 from skimage.draw import polygon, circle
 from math import ceil
 from random import randint
