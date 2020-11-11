@@ -10,6 +10,9 @@ from random import randint
 import cv2
 from matplotlib import pyplot as plt
 import random
+import keras 
+from keras.models import Model
+from keras.layers import Input
 
 def create_stereogram(img, pattern_width=50, invert=True):
     '''
@@ -217,3 +220,95 @@ def show_sampledata(generator, samples=10):
         fig_id += 3
 
 
+def show_features(features, init=0, end=None):
+    fig = plt.figure(figsize=(30, 120))
+    columns, rows = 5, features.shape[0] / 5
+
+    i = init
+    end = features.shape[0] if end is None else end
+    while i < end:
+        fig.add_subplot(rows, columns, i+1)
+        plt.imshow(features[i], cmap='gray')
+        ax = fig.gca()
+        ax.set_axis_off()
+        ax.set_title(str(i+1))
+        
+        i += 1
+    
+    plt.axis('off')
+    plt.show()
+
+    
+
+    
+
+    
+def get_sample_feature_maps_importance(model, sample, layer_idx, window=0, 
+                                       loss=keras.losses.CategoricalCrossentropy()):
+    y_true = model.predict(np.array([sample]))[0]
+
+    
+    output = model.layers[layer_idx-1].output
+    feature_map_getter = Model(model.inputs, output)
+    feature_maps = feature_map_getter.predict(np.array([sample])).reshape(output.shape[1:])
+
+    
+    # create an auxiliar model where the input will be the layer set as parameter
+    idx = layer_idx  # index of desired layer
+    input_shape = model.layers[idx].get_input_shape_at(0) # get the input shape of desired layer
+    layer_input = Input(shape=input_shape[1:]) # a new input tensor to be able to feed the desired layer
+
+    # create the new nodes for each layer in the path
+    x = layer_input
+    for layer in model.layers[idx:]:
+        x = layer(x)
+
+    # create the model to compute the feature importance
+    feature_importance = Model(layer_input, x)
+    
+    y_true2 = feature_importance.predict(np.array([feature_maps]))[0]
+    
+    assert (y_true == y_true2).all()
+    
+    # get the baseline score
+    base_score = loss(y_true, feature_importance.predict(np.array([feature_maps]))[0]).numpy()
+    
+    # introduce a random noise in each feature map
+    # and compute the importance as the change 
+    # in the prediction
+    num_features = feature_maps.shape[0]
+    feature_shape = feature_maps.shape[1:]
+    scores = []
+    feature_batch = []
+    preds = []
+    for i in range(0, num_features):
+        for j in range(3):
+            sf = np.copy(feature_maps)
+
+            if window == 0:
+                sf[i] = np.random.rand(*feature_shape)
+            else:
+                for k in range(max(0, i-window), min(num_features, i + window)):
+                    sf[k] = np.random.rand(*feature_shape)
+
+            feature_batch.append(sf)
+            
+        if len(feature_batch) > 32:
+            preds.append(feature_importance.predict(np.array(feature_batch)))
+            del feature_batch
+            feature_batch = []
+
+        
+    preds.append(feature_importance.predict(np.array(feature_batch)))
+    del feature_batch
+    y_pred = np.concatenate(preds)
+    
+    for i in range(0, y_pred.shape[0], 3):
+        score = loss([y_true]*3, y_pred[i:i+3]).numpy()
+        scores.append(score - base_score)
+    
+    scores = np.array(scores) 
+    return scores / scores.sum()
+ 
+
+ 

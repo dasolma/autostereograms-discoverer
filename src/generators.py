@@ -3,6 +3,7 @@ from random import randint
 import keras
 from utils import create_stereogram, create_random_figure
 import numpy as np
+import cv2
 
 class RandomFiguresDataGenerator(keras.utils.Sequence):
     'Data generator for train models'
@@ -100,7 +101,7 @@ class CommonImagesGenerator(keras.utils.Sequence):
             X.append(st)
 
             if self.mode == 'overlapping':
-                y.append(keras.utils.to_categorical(pattern_width, num_classes=shape[1]))
+                y.append(keras.utils.to_categorical(pattern_width, num_classes=self.shape[1]))
 
             if self.mode == 'classification':
                 class_ = file_name.split('/')[-2]
