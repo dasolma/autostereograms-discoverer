@@ -220,6 +220,24 @@ def show_sampledata(generator, samples=10):
         fig_id += 3
 
 
+def show_images(imgs, cmap='gray'):
+    fig = plt.figure(figsize=(30, 20))
+    columns, rows = 5, imgs.shape[0] / 5
+
+    i = 0
+    end = imgs.shape[0]
+    while i < end:
+        fig.add_subplot(rows, columns, i+1)
+        plt.imshow(imgs[i], cmap=cmap)
+        ax = fig.gca()
+        ax.set_axis_off()
+        ax.set_title(str(i+1))
+        
+        i += 1
+    
+    plt.axis('off')
+    plt.show()        
+        
 def show_features(features, init=0, end=None):
     fig = plt.figure(figsize=(30, 120))
     columns, rows = 5, features.shape[0] / 5

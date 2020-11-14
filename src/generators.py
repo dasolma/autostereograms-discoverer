@@ -8,8 +8,8 @@ import cv2
 class RandomFiguresDataGenerator(keras.utils.Sequence):
     'Data generator for train models'
 
-    def __init__(self, batch_size=32, shape=(200, 400), samples_per_epoch=1000, mode='binary',
-                 normalize=True, add_channel=False, model=None):
+    def __init__(self, batch_size=32, shape=(200, 400), samples_per_epoch=1000, mode='multiclass_overlapping',
+                 normalize=True, add_channel=False):
         self.shape = shape
         self.batch_size = batch_size
         self.n_classes = shape[1]
@@ -17,7 +17,7 @@ class RandomFiguresDataGenerator(keras.utils.Sequence):
         self.mode = mode
         self.normalize = normalize
         self.add_channel = add_channel
-        self.model = model
+
 
     def __len__(self):
         'Denotes the number of batches per epoch'
@@ -37,20 +37,16 @@ class RandomFiguresDataGenerator(keras.utils.Sequence):
             st = create_stereogram(img, pattern_width=pattern_width)
 
             f = 1 / 255 if self.normalize else 1
-            if self.mode == 'binary_overlapping':
-                r = self.model.predict(np.array([st])) * self.normalize
-                X += list(r.reshape(r.shape[1:] + (1,)))
-                y += list(keras.utils.to_categorical(pattern_width, num_classes=self.n_classes))
-            elif self.mode == 'multiclass_overlapping':
+            if self.mode == 'multiclass_overlapping':
                 if self.add_channel:
                     st = st.reshape([1] + list(st.shape))
                 X.append(st * f)
                 y.append(keras.utils.to_categorical(pattern_width, num_classes=self.n_classes))
-            elif self.mode == 'multiclass_classes':
+            elif self.mode == 'generator':
                 if self.add_channel:
                     st = st.reshape([1] + list(st.shape))
-                X.append(st * self.normalize)
-                y.append(keras.utils.to_categorical(_class, num_classes=len(classes)))
+                X.append(st * f)
+                y.append(img * f)
 
         return np.array(X), np.array(y)
 
