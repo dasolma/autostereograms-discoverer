@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import argparse
 import sys
-from models import classify_overlap, classifly_with_overlaping_layer, classifly_with_stereoconv_layer
+from models import classify_overlap, classifly_with_overlaping_layer, classifly_with_stereoconv_layer, train_final_experiment
 from utils import in_ipynb
 from livelossplot import PlotLossesKerasTF
 import os
@@ -28,14 +28,14 @@ def main(argv):
         os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 
     callbacks = [PlotLossesKerasTF()] if in_ipynb() else []
-    models = {
+    basic_models = {
         'naive': classify_overlap,
         'overlapping': classifly_with_overlaping_layer,
         'stereo': classifly_with_stereoconv_layer
     }
 
-    if args.experiment in models.keys():
-        model, train_gen, val_gen = models[args.experiment]()
+    if args.experiment in basic_models.keys():
+        model, train_gen, val_gen = basic_models[args.experiment]()
         model.summary()
 
         print("Training %d epochs" % args.epochs)
@@ -44,9 +44,11 @@ def main(argv):
         if args.output:
             print("Saving model to ", args.output)
             model.save(args.output)
-
+    elif args.experiment == 'final':
+        train_final_experiment(epochs=args.epochs)
+        
     else:
-        print('Experiment unknown. Valid experiments are: %s' % ','.join(models.keys()))
+        print('Experiment unknown. Valid experiments are: %s' % ','.join(models.keys() + ['final']))
 
 if __name__ == '__main__':
     main(sys.argv[1:])
